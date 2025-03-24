@@ -59,6 +59,30 @@ func (g *GoogleAI) GenerateContent(
 	}
 
 	model := g.client.GenerativeModel(opts.Model)
+	stringChoice, ok := opts.ToolChoice.(string)
+	if ok {
+		switch stringChoice {
+		case "auto":
+			model.ToolConfig = &genai.ToolConfig{
+				FunctionCallingConfig: &genai.FunctionCallingConfig{
+					Mode: genai.FunctionCallingAuto,
+				},
+			}
+		case "none":
+			model.ToolConfig = &genai.ToolConfig{
+				FunctionCallingConfig: &genai.FunctionCallingConfig{
+					Mode: genai.FunctionCallingNone,
+				},
+			}
+		case "required", "any":
+			model.ToolConfig = &genai.ToolConfig{
+				FunctionCallingConfig: &genai.FunctionCallingConfig{
+					Mode: genai.FunctionCallingAny,
+				},
+			}
+		}
+	}
+
 	model.SetCandidateCount(int32(opts.CandidateCount))
 	model.SetMaxOutputTokens(int32(opts.MaxTokens))
 	model.SetTemperature(float32(opts.Temperature))
