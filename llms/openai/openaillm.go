@@ -2,7 +2,6 @@ package openai
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"mime"
@@ -211,10 +210,12 @@ func (o *LLM) CreateEmbedding(ctx context.Context, inputTexts []string) ([][]flo
 }
 
 func (fcb FileContentBase64) MarshalJSON() ([]byte, error) {
-	m := map[string]string{
-		"type":      "text",
-		"filename":  fcb.Filename,
-		"file_data": fcb.FileData,
+	m := map[string]interface{}{
+		"type": "file",
+		"file": map[string]string{
+			"filename":  fcb.Filename,
+			"file_data": fcb.FileData,
+		},
 	}
 	return json.Marshal(m)
 }
@@ -241,10 +242,9 @@ func ExtractToolParts(contents []llms.ContentPart) ([]interface{}, []llms.ToolCa
 				ext = exts[0]
 			}
 			filename := uuid.New().String() + ext
-			data := base64.StdEncoding.EncodeToString(p.Data)
 			content = append(content, FileContentBase64{
 				Filename: filename,
-				FileData: data,
+				FileData: p.String(),
 			})
 		case llms.ToolCall:
 			toolCalls = append(toolCalls, p)
