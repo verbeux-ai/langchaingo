@@ -145,7 +145,7 @@ type ChatMessage struct { //nolint:musttag
 	Content string
 
 	// MultiContent is a list of content parts to use in the message.
-	MultiContent []llms.ContentPart
+	MultiContent []interface{}
 
 	// The name of the author of this message. May contain a-z, A-Z, 0-9, and underscores,
 	// with a maximum length of 64 characters.
@@ -176,11 +176,11 @@ func (m ChatMessage) MarshalJSON() ([]byte, error) {
 	}
 	if len(m.MultiContent) > 0 {
 		msg := struct {
-			Role         string             `json:"role"`
-			Content      string             `json:"-"`
-			MultiContent []llms.ContentPart `json:"content,omitempty"`
-			Name         string             `json:"name,omitempty"`
-			ToolCalls    []ToolCall         `json:"tool_calls,omitempty"`
+			Role         string        `json:"role"`
+			Content      string        `json:"-"`
+			MultiContent []interface{} `json:"content,omitempty"`
+			Name         string        `json:"name,omitempty"`
+			ToolCalls    []ToolCall    `json:"tool_calls,omitempty"`
 
 			// Deprecated: use ToolCalls instead.
 			FunctionCall *FunctionCall `json:"function_call,omitempty"`
@@ -195,11 +195,11 @@ func (m ChatMessage) MarshalJSON() ([]byte, error) {
 		return json.Marshal(msg)
 	}
 	msg := struct {
-		Role         string             `json:"role"`
-		Content      string             `json:"content"`
-		MultiContent []llms.ContentPart `json:"-"`
-		Name         string             `json:"name,omitempty"`
-		ToolCalls    []ToolCall         `json:"tool_calls,omitempty"`
+		Role         string        `json:"role"`
+		Content      string        `json:"content"`
+		MultiContent []interface{} `json:"-"`
+		Name         string        `json:"name,omitempty"`
+		ToolCalls    []ToolCall    `json:"tool_calls,omitempty"`
 		// Deprecated: use ToolCalls instead.
 		FunctionCall *FunctionCall `json:"function_call,omitempty"`
 
@@ -213,7 +213,7 @@ func (m ChatMessage) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg)
 }
 
-func isSingleTextContent(parts []llms.ContentPart) (string, bool) {
+func isSingleTextContent(parts []interface{}) (string, bool) {
 	if len(parts) != 1 {
 		return "", false
 	}
@@ -223,11 +223,11 @@ func isSingleTextContent(parts []llms.ContentPart) (string, bool) {
 
 func (m *ChatMessage) UnmarshalJSON(data []byte) error {
 	msg := struct {
-		Role         string             `json:"role"`
-		Content      string             `json:"content"`
-		MultiContent []llms.ContentPart `json:"-"` // not expected in response
-		Name         string             `json:"name,omitempty"`
-		ToolCalls    []ToolCall         `json:"tool_calls,omitempty"`
+		Role         string        `json:"role"`
+		Content      string        `json:"content"`
+		MultiContent []interface{} `json:"-"` // not expected in response
+		Name         string        `json:"name,omitempty"`
+		ToolCalls    []ToolCall    `json:"tool_calls,omitempty"`
 		// Deprecated: use ToolCalls instead.
 		FunctionCall *FunctionCall `json:"function_call,omitempty"`
 

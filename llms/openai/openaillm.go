@@ -2,8 +2,12 @@ package openai
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"mime"
 
+	"github.com/google/uuid"
 	"github.com/tmc/langchaingo/callbacks"
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/openai/internal/openaiclient"
@@ -56,7 +60,7 @@ func (o *LLM) GenerateContent(ctx context.Context, messages []llms.MessageConten
 
 	chatMsgs := make([]*ChatMessage, 0, len(messages))
 	for _, mc := range messages {
-		msg := &ChatMessage{MultiContent: mc.Parts}
+		msg := &ChatMessage{}
 		switch mc.Role {
 		case llms.ChatMessageTypeSystem:
 			msg.Role = RoleSystem
@@ -84,7 +88,7 @@ func (o *LLM) GenerateContent(ctx context.Context, messages []llms.MessageConten
 		}
 
 		// Here we extract tool calls from the message and populate the ToolCalls field.
-		newParts, toolCalls := ExtractToolParts(msg)
+		newParts, toolCalls := ExtractToolParts(mc.Parts)
 		msg.MultiContent = newParts
 		msg.ToolCalls = toolCallsFromToolCalls(toolCalls)
 
@@ -206,18 +210,42 @@ func (o *LLM) CreateEmbedding(ctx context.Context, inputTexts []string) ([][]flo
 	return embeddings, nil
 }
 
+func (fcb FileContentBase64) MarshalJSON() ([]byte, error) {
+	m := map[string]string{
+		"type":      "text",
+		"filename":  fcb.Filename,
+		"file_data": fcb.FileData,
+	}
+	return json.Marshal(m)
+}
+
+type FileContentBase64 struct {
+	Filename string
+	FileData string
+}
+
 // ExtractToolParts extracts the tool parts from a message.
-func ExtractToolParts(msg *ChatMessage) ([]llms.ContentPart, []llms.ToolCall) {
-	var content []llms.ContentPart
+func ExtractToolParts(contents []llms.ContentPart) ([]interface{}, []llms.ToolCall) {
+	var content []interface{}
 	var toolCalls []llms.ToolCall
-	for _, part := range msg.MultiContent {
+	for _, part := range contents {
 		switch p := part.(type) {
 		case llms.TextContent:
 			content = append(content, p)
 		case llms.ImageURLContent:
 			content = append(content, p)
 		case llms.BinaryContent:
-			content = append(content, p)
+			exts, _ := mime.ExtensionsByType(p.MIMEType)
+			ext := ""
+			if len(exts) > 0 {
+				ext = exts[0]
+			}
+			filename := uuid.New().String() + ext
+			data := base64.StdEncoding.EncodeToString(p.Data)
+			content = append(content, FileContentBase64{
+				Filename: filename,
+				FileData: data,
+			})
 		case llms.ToolCall:
 			toolCalls = append(toolCalls, p)
 		}
