@@ -2,7 +2,7 @@ module github.com/tmc/langchaingo/examples/chroma-vectorstore-example
 
 go 1.23.0
 
-toolchain go1.24.3
+toolchain go1.24.4
 
 require (
 	github.com/amikos-tech/chroma-go v0.1.4
