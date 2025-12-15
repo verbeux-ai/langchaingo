@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"mime"
 	"regexp"
 	"strings"
-	"mime"
 
 	"github.com/google/uuid"
 	"github.com/tmc/langchaingo/callbacks"
@@ -159,12 +159,13 @@ func (o *LLM) GenerateContent(ctx context.Context, messages []llms.MessageConten
 			// For models without system support, prepend system content to first user message
 			if systemContent != "" && !modelCaps.SupportsSystem {
 				// Prepend system content to the user message
-				newParts := []llms.ContentPart{}
+				var newParts []llms.ContentPart
+				var newParts2 []any
 				if systemContent != "" {
 					newParts = append(newParts, llms.TextContent{Text: systemContent + "\n\n"})
 				}
 				newParts = append(newParts, mc.Parts...)
-				msg.MultiContent = newParts
+				msg.MultiContent = newParts2
 				systemContent = "" // Clear after using
 			}
 		case llms.ChatMessageTypeGeneric:
@@ -247,10 +248,6 @@ func (o *LLM) GenerateContent(ctx context.Context, messages []llms.MessageConten
 	apiMetadata := make(map[string]any)
 	if opts.Metadata != nil {
 		for k, v := range opts.Metadata {
-			// Skip internal metadata keys
-			if k == "thinking_config" || strings.HasPrefix(k, "openai:") {
-				continue
-			}
 			apiMetadata[k] = v
 		}
 	}
