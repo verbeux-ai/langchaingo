@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -67,6 +68,9 @@ type ChatRequest struct {
 	// ReasoningEffort controls thinking effort for reasoning models (o1, o3, GPT-5).
 	// Valid values: "minimal" (GPT-5 only), "low", "medium", "high"
 	ReasoningEffort string `json:"reasoning_effort,omitempty"`
+
+	PromptCacheKey       string `json:"prompt_cache_key,omitempty"`
+	PromptCacheRetention string `json:"prompt_cache_retention,omitempty"`
 
 	// StreamingFunc is a function to be called for each chunk of a streaming response.
 	// Return an error to stop streaming early.
@@ -528,7 +532,16 @@ func (c *Client) createChat(ctx context.Context, payload *ChatRequest) (*ChatCom
 	}
 	// Parse response
 	var response ChatCompletionResponse
-	return &response, json.NewDecoder(r.Body).Decode(&response)
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, sanitizeHTTPError(err)
+	}
+
+	if err := json.Unmarshal(data, &response); err != nil {
+		return nil, sanitizeHTTPError(err)
+	}
+
+	return &response, nil
 }
 
 func parseStreamingChatResponse(ctx context.Context, r *http.Response, payload *ChatRequest) (*ChatCompletionResponse,

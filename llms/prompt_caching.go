@@ -38,3 +38,10 @@ func WithPromptCaching(enabled bool) CallOption {
 		opts.Metadata["prompt_caching"] = enabled
 	}
 }
+
+// WithPromptCaching adds cache control metadata to call options.
+func WithCache(key string) CallOption {
+	return func(opts *CallOptions) {
+		opts.CacheKey = key
+	}
+}

@@ -51,6 +51,8 @@ type CallOptions struct {
 	// ToolChoice is the choice of tool to use, it can either be "none", "auto" (the default behavior), or a specific tool as described in the ToolChoice type.
 	ToolChoice any `json:"tool_choice"`
 
+	CacheKey string `json:"cache_key"`
+
 	// Function defitions to include in the request.
 	// Deprecated: Use Tools instead.
 	Functions []FunctionDefinition `json:"functions,omitempty"`

@@ -267,6 +267,7 @@ func (o *LLM) GenerateContent(ctx context.Context, messages []llms.MessageConten
 		FrequencyPenalty:       opts.FrequencyPenalty,
 		PresencePenalty:        opts.PresencePenalty,
 		ReasoningEffort:        reasoningEffort,
+		PromptCacheKey:         opts.CacheKey,
 
 		// Token handling: check metadata flag for legacy behavior
 		// By default use max_completion_tokens (modern field)
